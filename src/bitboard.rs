@@ -16,6 +16,7 @@ const INIT_BOARD: [[char; 8]; 8] = [
     ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 
+#[derive(Clone)]
 pub struct BitBoard {
     bp: u64,
     wp: u64,
@@ -228,9 +229,97 @@ impl BitBoard {
         moves
     }
 
+    pub fn castling_black(&self, empty:u64) -> Vec<definitions::Move> {
+        let mut moves = Vec::new();
+
+        let could_castle_right:bool = empty & definitions::CASTLING_BITBOARD[2] > 0
+            && self.castling[2];
+
+        let could_castle_left:bool = empty & definitions::CASTLING_BITBOARD[3] > 0
+            && self.castling[3];
+
+        //    Castle right
+        //        Only do costly operations once
+        if  could_castle_left || could_castle_right {
+            //        Check attack span
+            let opponents = self.bp | self.bn | self.bb | self.br | self.bq | self.bk;
+            let mut opponent_attacks: u64 = 0;
+            let protected_squares_right: u64 = 0b0111000000000000000000000000000000000000000000000000000000000000;
+            let protected_squares_left: u64 = 0b0001111000000000000000000000000000000000000000000000000000000000;
+
+            //            TODO BBS: Check one bitboard at a time starting with most powerful pieces
+            let mut moves_list = black_pawns::moves(self.wp, empty, opponents, self.bp, Vec::new());
+            moves_list.append(&mut moves::straight(self.wr, empty, opponents));
+            moves_list.append(&mut moves::straight(self.wq, empty, opponents));
+            moves_list.append(&mut moves::diagonal(self.wb, empty, opponents));
+            moves_list.append(&mut moves::diagonal(self.wq, empty, opponents));
+            moves_list.append(&mut moves::knight(self.wn, empty, opponents));
+            moves_list.append(&mut moves::king(self.wk, empty, opponents));
+
+            for m in moves_list {
+                opponent_attacks = opponent_attacks | 1u64 << m.to.number;
+            };
+
+            if protected_squares_right & opponent_attacks == 0 && could_castle_right {
+                moves.push(definitions::Move::from_num_special(0, 0, 'o'));
+            }
+
+            if protected_squares_left & opponent_attacks == 0 && could_castle_left {
+                moves.push(definitions::Move::from_num_special(0, 0, 'O'));
+            }
+        }
+
+        moves
+    }
+
     pub fn make_move(&mut self, moove:definitions::Move) {
         if moove.special.is_some() {
-//            TODO BBS: special moves
+            match moove.special {
+                Some('o') => {
+                    if self.turn {
+                        self.wk = self.wk - (1u64 << 4);
+                        self.wk = self.wk + (1u64 << 6);
+                        self.wr = self.wr - (1u64 << 7);
+                        self.wr = self.wr + (1u64 << 5);
+                    } else {
+                        self.bk = self.bk - (1u64 << 60);
+                        self.bk = self.bk + (1u64 << 62);
+                        self.br = self.br - (1u64 << 63);
+                        self.br = self.br + (1u64 << 61);
+                    };
+                    self.history.push(moove.clone());
+                    self.turn = if self.turn { false } else { true };
+                    return;
+                },
+                Some('O') => {
+                    if self.turn {
+                        self.wk = self.wk - (1u64 << 4);
+                        self.wk = self.wk + (1u64 << 2);
+                        self.wr = self.wr - (1u64 << 0);
+                        self.wr = self.wr + (1u64 << 3);
+                    } else {
+                        self.bk = self.bk - (1u64 << 60);
+                        self.bk = self.bk + (1u64 << 58);
+                        self.br = self.br - (1u64 << 56);
+                        self.br = self.br + (1u64 << 59);
+                    }
+                    self.history.push(moove.clone());
+                    self.turn = if self.turn { false } else { true };
+                    return;
+                },
+                Some('E') => {
+                    if self.turn {
+                        let digit = 1u64 << moove.to.number;
+                        let taken = digit >> 8;
+                        self.bp = self.bp - taken;
+                    } else {
+                        let digit = 1u64 << moove.to.number;
+                        let taken = digit << 8;
+                        self.wp = self.wp - taken;
+                    };
+                },
+                _ => {}
+            }
         }
 
         let from = 1u64 << moove.from.number;
@@ -322,6 +411,48 @@ impl BitBoard {
         if self.bp & from > 0 {
             self.bp = self.bp - from;
             self.bp = self.bp + to;
+        }
+
+        if moove.special.is_some() {
+            match moove.special {
+                Some('N') => {
+                    if self.turn {
+                        self.wp = self.wp - (1u64 << moove.to.number);
+                        self.wn = self.wn + (1u64 << moove.to.number);
+                    } else {
+                        self.bp = self.bp - (1u64 << moove.to.number);
+                        self.bn = self.bn + (1u64 << moove.to.number);
+                    };
+                },
+                Some('B') => {
+                    if self.turn {
+                        self.wp = self.wp - (1u64 << moove.to.number);
+                        self.wb = self.wb + (1u64 << moove.to.number);
+                    } else {
+                        self.bp = self.bp - (1u64 << moove.to.number);
+                        self.bb = self.bb + (1u64 << moove.to.number);
+                    };
+                },
+                Some('R') => {
+                    if self.turn {
+                        self.wp = self.wp - (1u64 << moove.to.number);
+                        self.wr = self.wr + (1u64 << moove.to.number);
+                    } else {
+                        self.bp = self.bp - (1u64 << moove.to.number);
+                        self.br = self.br + (1u64 << moove.to.number);
+                    };
+                },
+                Some('Q') => {
+                    if self.turn {
+                        self.wp = self.wp - (1u64 << moove.to.number);
+                        self.wq = self.wq + (1u64 << moove.to.number);
+                    } else {
+                        self.bp = self.bp - (1u64 << moove.to.number);
+                        self.bq = self.bq + (1u64 << moove.to.number);
+                    };
+                },
+                _ => {}
+            }
         }
 
         self.history.push(moove.clone());
