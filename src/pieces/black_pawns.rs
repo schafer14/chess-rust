@@ -83,7 +83,7 @@ pub fn moves(bitboard:u64, empty:u64, opponents:u64, opponents_pawns:u64, histor
 
         let last_move_to_square = 1u64 << last_move.to.number;
 
-        if last_move.from.number == last_move.to.number - 16 &&
+        if last_move.to.number > 16 && last_move.from.number == last_move.to.number - 16 &&
             last_move_to_square & opponents_pawns > 0 {
             let dest = last_move.from.number + 8;
 
