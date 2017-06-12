@@ -20,7 +20,7 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
                 i += 1;
                 let digit:u64 = (1u64 << square) >> (i * direction);
 
-                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_A> 0)) {
+                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_H> 0)) {
                     break;
                 }
 
@@ -45,7 +45,7 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
                 i += 1;
                 let digit:u64 = (1u64 << square) << (i * direction);
 
-                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_H> 0)) {
+                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_A> 0)) {
                     break;
                 }
 

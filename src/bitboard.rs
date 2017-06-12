@@ -5,33 +5,22 @@ use definitions;
 
 use std::fmt;
 
-const INIT_BOARD: [[char; 8]; 8] = [
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-];
-
 #[derive(Clone)]
 pub struct BitBoard {
-    bp: u64,
-    wp: u64,
-    bn: u64,
-    wn: u64,
-    bb: u64,
-    wb: u64,
-    br: u64,
-    wr: u64,
-    bq: u64,
-    wq: u64,
-    bk: u64,
-    wk: u64,
+    pub bp: u64,
+    pub wp: u64,
+    pub bn: u64,
+    pub wn: u64,
+    pub bb: u64,
+    pub wb: u64,
+    pub br: u64,
+    pub wr: u64,
+    pub bq: u64,
+    pub wq: u64,
+    pub bk: u64,
+    pub wk: u64,
     castling: [bool; 4],
-    turn: bool,
+    pub turn: bool,
     history: Vec<definitions::Move>
 }
 
@@ -77,12 +66,13 @@ impl fmt::Display for BitBoard {
             write!(f, "\n")?
         }
 
-        write!(f, "  a b c d e f g h\n")
+        if self.turn { write!(f, "•") } else { write!(f, "o") };
+        write!(f, " a b c d e f g h\n")
     }
 }
 
 impl BitBoard {
-    pub fn new() -> BitBoard {
+    pub fn new(init_board:[[char; 8]; 8]) -> BitBoard {
         let mut bitboard = BitBoard { bp: 0, wp: 0, bn: 0, wn: 0, bb: 0, wb: 0, br: 0, wr: 0, bq: 0,
             wq: 0, bk: 0, wk: 0, turn: true, castling: [true, true, true, true], history: Vec::new() };
 
@@ -91,51 +81,51 @@ impl BitBoard {
                 let square:u32 = ((7 - row) * 8 + col) as u32;
                 let digit = 2u64.pow(square);
 
-                if 'p' == INIT_BOARD[row][col] {
+                if 'p' == init_board[row][col] {
                     bitboard.bp +=  digit
                 };
 
-                if 'P' == INIT_BOARD[row][col] {
+                if 'P' == init_board[row][col] {
                     bitboard.wp +=  digit
                 };
 
-                if 'n' == INIT_BOARD[row][col] {
+                if 'n' == init_board[row][col] {
                     bitboard.bn +=  digit
                 };
 
-                if 'N' == INIT_BOARD[row][col] {
+                if 'N' == init_board[row][col] {
                     bitboard.wn +=  digit
                 };
 
-                if 'b' == INIT_BOARD[row][col] {
+                if 'b' == init_board[row][col] {
                     bitboard.bb +=  digit
                 };
 
-                if 'B' == INIT_BOARD[row][col] {
+                if 'B' == init_board[row][col] {
                     bitboard.wb +=  digit
                 };
 
-                if 'r' == INIT_BOARD[row][col] {
+                if 'r' == init_board[row][col] {
                     bitboard.br +=  digit
                 };
 
-                if 'R' == INIT_BOARD[row][col] {
+                if 'R' == init_board[row][col] {
                     bitboard.wr +=  digit
                 };
 
-                if 'q' == INIT_BOARD[row][col] {
+                if 'q' == init_board[row][col] {
                     bitboard.bq +=  digit
                 };
 
-                if 'Q' == INIT_BOARD[row][col] {
+                if 'Q' == init_board[row][col] {
                     bitboard.wq +=  digit
                 };
 
-                if 'k' == INIT_BOARD[row][col] {
+                if 'k' == init_board[row][col] {
                     bitboard.bk +=  digit
                 };
 
-                if 'K' == INIT_BOARD[row][col] {
+                if 'K' == init_board[row][col] {
                     bitboard.wk +=  digit
                 };
             }
@@ -145,6 +135,45 @@ impl BitBoard {
         bitboard
 
 
+    }
+
+    pub fn from_fen(fen:String) -> BitBoard {
+        let parts = fen.trim().split(" ").collect::<Vec<&str>>();
+
+        let mut board_array = [[' '; 8]; 8];
+        let mut i = 0; let mut j = 0;
+        for c in parts[0].chars() {
+            match c {
+                '/' => { i += 1; j = 0; },
+                'p' => { board_array[i][j] = 'p'; j += 1; },
+                'P' => { board_array[i][j] = 'P'; j += 1; },
+                'n' => { board_array[i][j] = 'n'; j += 1; },
+                'N' => { board_array[i][j] = 'N'; j += 1; },
+                'b' => { board_array[i][j] = 'b'; j += 1; },
+                'B' => { board_array[i][j] = 'B'; j += 1; },
+                'r' => { board_array[i][j] = 'r'; j += 1; },
+                'R' => { board_array[i][j] = 'R'; j += 1; },
+                'q' => { board_array[i][j] = 'q'; j += 1; },
+                'Q' => { board_array[i][j] = 'Q'; j += 1; },
+                'k' => { board_array[i][j] = 'k'; j += 1; },
+                'K' => { board_array[i][j] = 'K'; j += 1; },
+                _ => { let skip = c.to_digit(10).unwrap() as usize; j += skip; }
+            }
+        }
+
+        let mut bb = BitBoard::new(board_array);
+        bb.castling = [false, false, false, false];
+
+        if parts.len() > 1 && parts[1] == "b" { bb.turn = false }
+
+        if parts.len() > 2 {
+            if parts[2].contains("K") { bb.castling[0] = true }
+            if parts[2].contains("Q") { bb.castling[1] = true }
+            if parts[2].contains("k") { bb.castling[2] = true }
+            if parts[2].contains("q") { bb.castling[3] = true }
+        }
+
+        bb
     }
 }
 
@@ -366,10 +395,14 @@ impl BitBoard {
         if self.wk & from > 0 {
             self.wk = self.wk - from;
             self.wk = self.wk + to;
+            self.castling[0] = false;
+            self.castling[1] = false;
         }
         if self.bk & from > 0 {
             self.bk = self.bk - from;
             self.bk = self.bk + to;
+            self.castling[2] = false;
+            self.castling[3] = false;
         }
         if self.wq & from > 0 {
             self.wq = self.wq - from;
@@ -382,10 +415,22 @@ impl BitBoard {
         if self.wr & from > 0 {
             self.wr = self.wr - from;
             self.wr = self.wr + to;
+            if from == (1u64 << 7) {
+                self.castling[0] = false;
+            }
+            if from == 0 {
+                self.castling[1] = false;
+            }
         }
         if self.br & from > 0 {
             self.br = self.br - from;
             self.br = self.br + to;
+            if from == (1u64 << 63) {
+                self.castling[2] = false;
+            }
+            if from == (1u64 << 56) {
+                self.castling[3] = false;
+            }
         }
         if self.wb & from > 0 {
             self.wb = self.wb - from;
@@ -458,4 +503,9 @@ impl BitBoard {
         self.history.push(moove.clone());
         self.turn = if self.turn { false } else { true };
     }
+
+    pub fn turn(&self) -> bool {
+        self.turn
+    }
 }
+
