@@ -21,7 +21,7 @@ fn main() {
     let reader = io::stdin();
     
     let fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
-//    let fen = String::from("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b");
+//    let fen = String::from("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq");
     let mut board = bitboard::BitBoard::from_fen(fen.clone());
     let mut old_board = board.clone();
 

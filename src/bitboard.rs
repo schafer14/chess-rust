@@ -4,6 +4,7 @@ use moves;
 use definitions;
 
 use std::fmt;
+use std::process;
 
 #[derive(Clone)]
 pub struct BitBoard {
@@ -250,11 +251,11 @@ impl BitBoard {
     pub fn castling_white(&self, empty:u64) -> Vec<definitions::Move> {
         let mut moves = Vec::new();
 
-        let could_castle_right:bool = !definitions::CASTLING_BITBOARD[0] | !empty == definitions::CASTLING_BITBOARD[0]
-            && self.castling[0];
+        let could_castle_right:bool = (!definitions::CASTLING_BITBOARD[0] | empty) == definitions::ALL && self.castling[0]
+            && (self.wr & 1u64 << 7 > 0);
 
-        let could_castle_left:bool = !definitions::CASTLING_BITBOARD[1] | !empty == definitions::CASTLING_BITBOARD[1]
-            && self.castling[1];
+        let could_castle_left:bool = (!definitions::CASTLING_BITBOARD[1] | empty) == definitions::ALL && self.castling[1]
+            && (self.wr & 1 > 0);
 
         //    Castle right
 //        Only do costly operations once
@@ -266,8 +267,7 @@ impl BitBoard {
             let protected_squares_left: u64 = 0b11110;
 
             //            TODO BBS: Check one bitboard at a time starting with most powerful pieces
-            let mut moves_list = black_pawns::moves(self.bp, empty, opponents, self.wp, Vec::new());
-            moves_list.append(&mut moves::straight(self.br, empty, opponents));
+            let mut moves_list = &mut moves::straight(self.br, empty, opponents);
             moves_list.append(&mut moves::straight(self.bq, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.bb, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.bq, empty, opponents));
@@ -277,6 +277,8 @@ impl BitBoard {
             for m in moves_list {
                 opponent_attacks = opponent_attacks | 1u64 << m.to.number;
             };
+
+            opponent_attacks = opponent_attacks | self.bp >> 7 | self.bp >> 9;
 
             if protected_squares_right & opponent_attacks == 0 && could_castle_right {
                 moves.push(definitions::Move::from_num_special(0, 0, 'o'));
@@ -293,11 +295,11 @@ impl BitBoard {
     pub fn castling_black(&self, empty:u64) -> Vec<definitions::Move> {
         let mut moves = Vec::new();
 
-        let could_castle_right:bool = !definitions::CASTLING_BITBOARD[2] | !empty == definitions::CASTLING_BITBOARD[2]
-            && self.castling[2];
+        let could_castle_right:bool = (!definitions::CASTLING_BITBOARD[2] | empty) == definitions::ALL && self.castling[2]
+            && (self.br & 1u64 << 63 > 0);
 
-        let could_castle_left:bool = !definitions::CASTLING_BITBOARD[3] | !empty == definitions::CASTLING_BITBOARD[3]
-            && self.castling[3];
+        let could_castle_left:bool = (!definitions::CASTLING_BITBOARD[3] | empty) == definitions::ALL  && self.castling[3]
+            && (self.br & 1u64 << 56 > 0);
 
         //    Castle right
         //        Only do costly operations once
@@ -306,11 +308,10 @@ impl BitBoard {
             let opponents = self.bp | self.bn | self.bb | self.br | self.bq | self.bk;
             let mut opponent_attacks: u64 = 0;
             let protected_squares_right: u64 = 0b0111000000000000000000000000000000000000000000000000000000000000;
-            let protected_squares_left: u64 = 0b0001111000000000000000000000000000000000000000000000000000000000;
+            let protected_squares_left: u64 = 0b0001110000000000000000000000000000000000000000000000000000000000;
 
             //            TODO BBS: Check one bitboard at a time starting with most powerful pieces
-            let mut moves_list = black_pawns::moves(self.wp, empty, opponents, self.bp, Vec::new());
-            moves_list.append(&mut moves::straight(self.wr, empty, opponents));
+            let mut moves_list = moves::straight(self.wr, empty, opponents);
             moves_list.append(&mut moves::straight(self.wq, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.wb, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.wq, empty, opponents));
@@ -320,6 +321,8 @@ impl BitBoard {
             for m in moves_list {
                 opponent_attacks = opponent_attacks | 1u64 << m.to.number;
             };
+
+            opponent_attacks = opponent_attacks | self.wp << 7 | self.wp << 9;
 
             if protected_squares_right & opponent_attacks == 0 && could_castle_right {
                 moves.push(definitions::Move::from_num_special(0, 0, 'o'));
@@ -458,7 +461,7 @@ impl BitBoard {
             if from == (1u64 << 7) {
                 self.castling[0] = false;
             }
-            if from == 0 {
+            if from == 1 {
                 self.castling[1] = false;
             }
         }

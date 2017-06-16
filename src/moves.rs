@@ -18,6 +18,9 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
 //            Moving Left / Down
             loop {
                 i += 1;
+
+                if i * direction > 63 { break; }
+
                 let digit:u64 = (1u64 << square) >> (i * direction);
 
                 if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_H > 0)) {
@@ -43,6 +46,9 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
 //            Moving Right / Up
             loop {
                 i += 1;
+
+                if i * direction > 63 { break; }
+
                 let digit:u64 = (1u64 << square) << (i * direction);
 
                 if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_A > 0)) {

@@ -100,6 +100,14 @@ fn minimax(original_board:bitboard::BitBoard, depth:usize, maximizing:bool, play
 fn utility(original_board:bitboard::BitBoard, player:bool) -> isize {
     let board = original_board.clone();
 
+    if board.wk.count_ones() == 0 {
+        return if player { <isize>::min_value() } else { <isize>::max_value() }
+    }
+
+    if board.bk.count_ones() == 0 {
+        return if player { <isize>::max_value() } else { <isize>::min_value() }
+    }
+
     let white_score =
         board.wp.count_ones() +
             board.wn.count_ones() * 3 +
