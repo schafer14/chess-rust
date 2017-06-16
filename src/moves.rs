@@ -3,7 +3,7 @@ use definitions;
 pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move> {
     let mut moves = Vec::new();
 
-    let mut bitboard_copy = bitboard;
+    let mut bitboard_copy = bitboard.clone();
 
     //    Depending on how trailing_zeros is implemented this could be sped up with bitscans
     //    Which require 2s complemented (signed) bitboards
@@ -11,7 +11,7 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
         //        Come back to this an implement it correctly
         if bitboard_copy == 0 { break }
 
-        let square = bitboard_copy.trailing_zeros();
+        let square:u64 = bitboard_copy.trailing_zeros() as u64;
 
         for direction in vec![1, 8] {
             let mut i = 0;
@@ -20,7 +20,7 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
                 i += 1;
                 let digit:u64 = (1u64 << square) >> (i * direction);
 
-                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_H> 0)) {
+                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_H > 0)) {
                     break;
                 }
 
@@ -45,7 +45,7 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
                 i += 1;
                 let digit:u64 = (1u64 << square) << (i * direction);
 
-                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_A> 0)) {
+                if digit & definitions::ALL == 0 || (direction == 1 && (digit &  definitions::FILE_A > 0)) {
                     break;
                 }
 
@@ -64,9 +64,6 @@ pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move>
 
             }
         }
-
-
-
 
         bitboard_copy = bitboard_copy - (1u64 << square);
     }

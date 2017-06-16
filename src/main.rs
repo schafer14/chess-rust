@@ -10,48 +10,64 @@ mod pieces {
 
 mod ai {
     pub mod molly;
+    pub mod ids;
 }
 
 use ai::molly;
 
-const INIT_BOARD: [[char; 8]; 8] = [
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-];
+const PLAYERS:[bool; 2] = [true, true];
 
 fn main() {
     let reader = io::stdin();
-    let human_only = false;
-
-    let mut board = bitboard::BitBoard::new(INIT_BOARD);
-
+    
     let fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
 //    let fen = String::from("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b");
-    let mut board = bitboard::BitBoard::from_fen(fen);
+    let mut board = bitboard::BitBoard::from_fen(fen.clone());
+    let mut old_board = board.clone();
 
     println!("{}", board);
 
     #[allow(while_true)]
     while true {
-        if board.turn() || human_only {
+        if (board.turn() && PLAYERS[0]) || (!board.turn() && PLAYERS[1]) {
             let mut input_text = String::new();
 
             #[allow(unused_must_use)]
             reader.read_line(&mut input_text);
 
-            match input_text.trim() {
+            let parts = input_text.trim().split(" ").collect::<Vec<&str>>();
+
+            match parts[0] {
                 "q" => break,
                 "h" => println!("{:?}", board.moves()),
                 "hl" => println!("{:?}", board.moves().len()),
-                "u" => println!("Undo not supported yet"),
+                "perft" => ai::ids::perft(board.clone(), 5),
+                "divide" => {
+                    let num = parts.clone()[1].chars().next().unwrap().to_digit(10).unwrap() as usize;
+                    ai::ids::divide(board.clone(), num - 1);
+                },
+                "d" => println!("{}", board),
+                "m" => {
+                    let moove = molly::gen_move(board.clone()).unwrap();
+                    old_board = board.clone();
+                    board.make_move(moove);
+                    println!("{}", board);
+                },
+                "s" => {
+                    let moove = molly::gen_move(board.clone()).unwrap();
+                    println!("Suggestion {:?}", moove);
+                },
+                "n" => {
+                    board = bitboard::BitBoard::from_fen(fen.clone());
+                    println!("{}", board);
+                }
+                "u" => {
+                    board = old_board.clone();
+                    println!("{}", board);
+                },
                 _ => {
-                    let moove = definitions::Move::from_str(input_text);
+                    let moove = definitions::Move::from_str(input_text.clone());
+                    old_board = board.clone();
                     board.make_move(moove);
                     println!("{}", board);
 

@@ -90,11 +90,11 @@ pub fn moves(bitboard:u64, empty:u64, opponents:u64, opponents_pawns:u64, histor
             let left = 1u64 << (last_move.to.number + 1);
             let right = 1u64 << (last_move.to.number - 1);
 
-            if right & bitboard > 0 && !(definitions::FILE_H & last_move_to_square > 0) {
+            if right & bitboard > 0 && !(definitions::FILE_A & last_move_to_square > 0) {
                 moves.push(definitions::Move::from_num_special(last_move.to.number - 1, dest, 'E'))
             }
 
-            if left & bitboard > 0 && !(definitions::FILE_A & last_move_to_square > 0) {
+            if left & bitboard > 0 && !(definitions::FILE_H & last_move_to_square > 0) {
                 moves.push(definitions::Move::from_num_special(last_move.to.number + 1, dest, 'E'))
             }
         }

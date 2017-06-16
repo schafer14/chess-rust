@@ -179,6 +179,7 @@ impl BitBoard {
 
 impl BitBoard {
 //    TODO BBS: En Passant bitboard
+//    This allows for moving into check but provides much faster moves
     pub fn moves(&self) -> Vec<definitions::Move> {
         let turn = self.turn;
 
@@ -209,19 +210,50 @@ impl BitBoard {
             moves_list.append(&mut moves::diagonal(self.bq, empty, opponents));
             moves_list.append(&mut moves::knight(self.bn, empty, opponents));
             moves_list.append(&mut moves::king(self.bk, empty, opponents));
+            moves_list.append(&mut self.castling_black(empty));
         }
 
 
         moves_list
     }
 
+//    This will remove the ability to move into check.
+    pub fn moves_accurate(&self) -> Vec<definitions::Move> {
+        let mut moves = self.moves().clone();
+        let mut accurate_moves = Vec::new();
+        let mut bad_moves = Vec::new();
+
+        for moove in moves.clone() {
+            let mut child = self.clone();
+            child.make_move(moove.clone());
+
+            let king = if child.turn { child.bk } else { child.wk };
+            let king_square = king.trailing_zeros() as u8;
+
+            for opp_move in child.moves() {
+                if opp_move.to.number == king_square {
+                    bad_moves.push(moove);
+                    break;
+                }
+            }
+        }
+
+        for moove in moves.clone() {
+            if !bad_moves.contains(&moove) {
+                accurate_moves.push(moove);
+            }
+        }
+
+        accurate_moves
+    }
+
     pub fn castling_white(&self, empty:u64) -> Vec<definitions::Move> {
         let mut moves = Vec::new();
 
-        let could_castle_right:bool = empty & definitions::CASTLING_BITBOARD[0] > 0
+        let could_castle_right:bool = !definitions::CASTLING_BITBOARD[0] | !empty == definitions::CASTLING_BITBOARD[0]
             && self.castling[0];
 
-        let could_castle_left:bool = empty & definitions::CASTLING_BITBOARD[1] > 0
+        let could_castle_left:bool = !definitions::CASTLING_BITBOARD[1] | !empty == definitions::CASTLING_BITBOARD[1]
             && self.castling[1];
 
         //    Castle right
@@ -261,10 +293,10 @@ impl BitBoard {
     pub fn castling_black(&self, empty:u64) -> Vec<definitions::Move> {
         let mut moves = Vec::new();
 
-        let could_castle_right:bool = empty & definitions::CASTLING_BITBOARD[2] > 0
+        let could_castle_right:bool = !definitions::CASTLING_BITBOARD[2] | !empty == definitions::CASTLING_BITBOARD[2]
             && self.castling[2];
 
-        let could_castle_left:bool = empty & definitions::CASTLING_BITBOARD[3] > 0
+        let could_castle_left:bool = !definitions::CASTLING_BITBOARD[3] | !empty == definitions::CASTLING_BITBOARD[3]
             && self.castling[3];
 
         //    Castle right
@@ -310,11 +342,15 @@ impl BitBoard {
                         self.wk = self.wk + (1u64 << 6);
                         self.wr = self.wr - (1u64 << 7);
                         self.wr = self.wr + (1u64 << 5);
+                        self.castling[0] = false;
+                        self.castling[1] = false;
                     } else {
                         self.bk = self.bk - (1u64 << 60);
                         self.bk = self.bk + (1u64 << 62);
                         self.br = self.br - (1u64 << 63);
                         self.br = self.br + (1u64 << 61);
+                        self.castling[2] = false;
+                        self.castling[3] = false;
                     };
                     self.history.push(moove.clone());
                     self.turn = if self.turn { false } else { true };
@@ -326,11 +362,15 @@ impl BitBoard {
                         self.wk = self.wk + (1u64 << 2);
                         self.wr = self.wr - (1u64 << 0);
                         self.wr = self.wr + (1u64 << 3);
+                        self.castling[0] = false;
+                        self.castling[1] = false;
                     } else {
                         self.bk = self.bk - (1u64 << 60);
                         self.bk = self.bk + (1u64 << 58);
                         self.br = self.br - (1u64 << 56);
                         self.br = self.br + (1u64 << 59);
+                        self.castling[2] = false;
+                        self.castling[3] = false;
                     }
                     self.history.push(moove.clone());
                     self.turn = if self.turn { false } else { true };

@@ -1,11 +1,11 @@
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Square {
     pub number: u8
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Move {
     pub from: Square,
     pub to: Square,
@@ -14,12 +14,21 @@ pub struct Move {
 
 impl fmt::Debug for Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.special.is_some() {
-            write!(f, "({:?} -> {:?}{})", self.from.number, self.to.number, self.special.unwrap())
-        } else {
-            write!(f, "({:?} -> {:?})", self.from.number, self.to.number)
-        }
+        let letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
+        let i0 = letters[(self.from.number % 8) as usize];
+        let j0 = (self.from.number / 8) + 1;
+
+        let i1 = letters[(self.to.number % 8) as usize];
+        let j1 = (self.to.number / 8) + 1;
+
+
+        match self.special {
+            Some('o') => write!(f, "0 0"),
+            Some('O') => write!(f, "0 0 0"),
+            Some(x) => write!(f, "{}{:?} {}{:?} {}", i0, j0, i1, j1, x),
+            None => write!(f, "{}{:?} {}{:?}", i0, j0, i1, j1)
+        }
     }
 }
 
@@ -89,7 +98,7 @@ pub const CASTLING_BITBOARD:[u64; 4] = [
     0b0111000000000000000000000000000000000000000000000000000000000000,
 ];
 
-pub const ALL:u64 = 0xFFFFFFFFFFFFFFF;
+pub const ALL:u64 = 0xFFFFFFFFFFFFFFFF;
 
 pub const KNIGHT_BITBOARDS:[u64; 64] = [
     0x20400,
