@@ -24,11 +24,25 @@ impl fmt::Debug for Move {
 
 
         match self.special {
-            Some('o') => write!(f, "0 0"),
-            Some('O') => write!(f, "0 0 0"),
-            Some(x) => write!(f, "{}{:?} {}{:?} {}", i0, j0, i1, j1, x),
-            None => write!(f, "{}{:?} {}{:?}", i0, j0, i1, j1)
+            Some(x) => write!(f, "{}{:?}{}{:?}{}", i0, j0, i1, j1, x),
+            None => write!(f, "{}{:?}{}{:?}", i0, j0, i1, j1)
         }
+    }
+}
+
+impl fmt::Display for Move {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+        let i0 = letters[(self.from.number % 8) as usize];
+        let j0 = (self.from.number / 8) + 1;
+
+        let i1 = letters[(self.to.number % 8) as usize];
+        let j1 = (self.to.number / 8) + 1;
+
+        let special = self.special.unwrap_or(' ');
+
+        write!(f, "{}{:?}{}{:?}{}", i0, j0, i1, j1, special)
     }
 }
 
@@ -43,31 +57,17 @@ impl Move {
 
     pub fn from_str(str:String) -> Move {
         let possibles = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        let parts = str.trim().split(" ").collect::<Vec<&str>>();
+        let mut chars = str.chars();
 
-        if parts == ["0", "0"] {
-            return Move { from: Square { number: 1 }, to: Square { number: 1 }, special: Some('o')};
-        }
+        let char_1 = chars.next().unwrap();
+        let from_i = possibles.iter().position(|&c| c == char_1).unwrap();
 
-        if parts == ["0", "0", "0"] {
-            return Move { from: Square { number: 1 }, to: Square { number: 1 }, special: Some('O')};
-        }
+        let from_j = chars.next().unwrap().to_digit(10).unwrap() as usize;
 
-        let mut from_str = parts[0].chars();
+        let char_2 = chars.next().unwrap();
+        let to_i = possibles.iter().position(|&c| c == char_2).unwrap();
 
-        let from_i_char = from_str.next().unwrap();
-        let from_j_char = from_str.next().unwrap();
-
-        let from_i = possibles.iter().position(|&c| c == from_i_char).unwrap();
-        let from_j = from_j_char.to_digit(10).unwrap() as usize;
-
-        let mut to_str = parts[1].chars();
-
-        let to_i_char = to_str.next().unwrap();
-        let to_j_char = to_str.next().unwrap();
-
-        let to_i = possibles.iter().position(|&c| c == to_i_char).unwrap();
-        let to_j = to_j_char.to_digit(10).unwrap() as usize;
+        let to_j = chars.next().unwrap().to_digit(10).unwrap() as usize;
 
         Move { from: Square { number: (from_i + (from_j - 1) * 8) as u8 },
             to: Square { number: (to_i + (to_j - 1) * 8) as u8 }, special: None }

@@ -325,11 +325,11 @@ impl BitBoard {
             opponent_attacks = opponent_attacks | self.wp << 7 | self.wp << 9;
 
             if protected_squares_right & opponent_attacks == 0 && could_castle_right {
-                moves.push(definitions::Move::from_num_special(60, 62, 'o'));
+                moves.push(definitions::Move::from_num(60, 62));
             }
 
             if protected_squares_left & opponent_attacks == 0 && could_castle_left {
-                moves.push(definitions::Move::from_num_special(60, 58, 'O'));
+                moves.push(definitions::Move::from_num(60, 58));
             }
         }
 
@@ -337,61 +337,16 @@ impl BitBoard {
     }
 
     pub fn make_move(&mut self, moove:definitions::Move) {
-        if moove.special.is_some() {
-            match moove.special {
-                Some('o') => {
-                    if self.turn {
-                        self.wk = self.wk - (1u64 << 4);
-                        self.wk = self.wk + (1u64 << 6);
-                        self.wr = self.wr - (1u64 << 7);
-                        self.wr = self.wr + (1u64 << 5);
-                        self.castling[0] = false;
-                        self.castling[1] = false;
-                    } else {
-                        self.bk = self.bk - (1u64 << 60);
-                        self.bk = self.bk + (1u64 << 62);
-                        self.br = self.br - (1u64 << 63);
-                        self.br = self.br + (1u64 << 61);
-                        self.castling[2] = false;
-                        self.castling[3] = false;
-                    };
-                    self.history.push(moove.clone());
-                    self.turn = if self.turn { false } else { true };
-                    return;
-                },
-                Some('O') => {
-                    if self.turn {
-                        self.wk = self.wk - (1u64 << 4);
-                        self.wk = self.wk + (1u64 << 2);
-                        self.wr = self.wr - (1u64 << 0);
-                        self.wr = self.wr + (1u64 << 3);
-                        self.castling[0] = false;
-                        self.castling[1] = false;
-                    } else {
-                        self.bk = self.bk - (1u64 << 60);
-                        self.bk = self.bk + (1u64 << 58);
-                        self.br = self.br - (1u64 << 56);
-                        self.br = self.br + (1u64 << 59);
-                        self.castling[2] = false;
-                        self.castling[3] = false;
-                    }
-                    self.history.push(moove.clone());
-                    self.turn = if self.turn { false } else { true };
-                    return;
-                },
-                Some('E') => {
-                    if self.turn {
-                        let digit = 1u64 << moove.to.number;
-                        let taken = digit >> 8;
-                        self.bp = self.bp - taken;
-                    } else {
-                        let digit = 1u64 << moove.to.number;
-                        let taken = digit << 8;
-                        self.wp = self.wp - taken;
-                    };
-                },
-                _ => {}
-            }
+        if moove.special == Some('E') {
+            if self.turn {
+                let digit = 1u64 << moove.to.number;
+                let taken = digit >> 8;
+                self.bp = self.bp - taken;
+            } else {
+                let digit = 1u64 << moove.to.number;
+                let taken = digit << 8;
+                self.wp = self.wp - taken;
+            };
         }
 
         let from = 1u64 << moove.from.number;
@@ -436,12 +391,32 @@ impl BitBoard {
 
 
         if self.wk & from > 0 {
+            if from == 1u64 << 4 && to == 1u64 << 6 {
+                self.wr = self.wr - (1u64 << 7);
+                self.wr = self.wr + (1u64 << 5);
+            }
+
+            if from == 1u64 << 4 && to == 1u64 << 2 {
+                self.wr = self.wr - 1;
+                self.wr = self.wr + (1u64 << 3);
+            }
+
             self.wk = self.wk - from;
             self.wk = self.wk + to;
             self.castling[0] = false;
             self.castling[1] = false;
         }
         if self.bk & from > 0 {
+            if from == 1u64 << 60 && to == 1u64 << 62 {
+                self.br = self.br - (1u64 << 63);
+                self.br = self.br + (1u64 << 61);
+            }
+
+            if from == 1u64 << 60 && to == 1u64 << 58 {
+                self.br = self.br - (1u64 << 56);
+                self.br = self.br + (1u64 << 59);
+            }
+
             self.bk = self.bk - from;
             self.bk = self.bk + to;
             self.castling[2] = false;

@@ -4,8 +4,8 @@ use bitboard;
 use definitions;
 
 const VERBOSE:bool = true;
-const DEPTH:usize = 5;
-const ALPHA_BETA:bool = false;
+const DEPTH:usize = 9;
+const ALPHA_BETA:bool = true;
 
 pub fn gen_move(main_board:bitboard::BitBoard) -> Option<definitions::Move> {
     let start_time = time::precise_time_s();
@@ -17,9 +17,6 @@ pub fn gen_move(main_board:bitboard::BitBoard) -> Option<definitions::Move> {
         let board = main_board.clone();
         let turn = board.turn;
         let (s, m, e) = minimax(board, depth, true, turn, <isize>::min_value(), <isize>::max_value(), ALPHA_BETA);
-        if VERBOSE {
-            println!("Level {:?}: Expanded: {:?}", depth, e);
-        }
         moove = m;
         score = s;
         expanded += e;
@@ -31,6 +28,7 @@ pub fn gen_move(main_board:bitboard::BitBoard) -> Option<definitions::Move> {
         println!("Move: {:?} Score: {:?}", moove, score);
         println!("Expanded: {:?} nodes in {:?} seconds", expanded, end_time - start_time);
         println!("Nodes per second: {:?}", expanded as f64 / (end_time - start_time));
+        println!("");
     }
 
     moove
