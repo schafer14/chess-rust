@@ -2,16 +2,10 @@ extern crate time;
 
 use bitboard;
 
-pub fn perft(main_board:bitboard::BitBoard, depth:usize) {
-    for d in 1..depth {
-        println!("{:?}", d);
-        let board = main_board.clone();
-        let turn = board.turn;
+pub fn perft(main_board:bitboard::BitBoard, depth:usize) -> usize {
+    let board = main_board.clone();
 
-        let e = ldfs(board, d);
-
-        println!("Level {:?}: Expanded: {:?}", d, e);
-    };
+    ldfs(board, depth)
 }
 
 pub fn divide(main_board:bitboard::BitBoard, depth:usize) {

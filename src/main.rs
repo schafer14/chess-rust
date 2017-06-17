@@ -1,6 +1,7 @@
 mod bitboard;
 mod definitions;
 mod moves;
+mod perft_test;
 use std::io;
 
 mod pieces {
@@ -17,11 +18,12 @@ use ai::molly;
 
 const PLAYERS:[bool; 2] = [true, true];
 
+
 fn main() {
     let reader = io::stdin();
     
-    let fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
-//    let fen = String::from("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq");
+//    let fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
+    let fen = String::from("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq");
     let mut board = bitboard::BitBoard::from_fen(fen.clone());
     let mut old_board = board.clone();
 
@@ -39,9 +41,9 @@ fn main() {
 
             match parts[0] {
                 "q" => break,
-                "h" => println!("{:?}", board.moves()),
-                "hl" => println!("{:?}", board.moves().len()),
-                "perft" => ai::ids::perft(board.clone(), 5),
+                "h" => println!("{:?}", board.moves_accurate()),
+                "perft" => println!("{:?}", ai::ids::perft(board.clone(), 5)),
+                "test" => perft_test::test(),
                 "divide" => {
                     let num = parts.clone()[1].chars().next().unwrap().to_digit(10).unwrap() as usize;
                     ai::ids::divide(board.clone(), num - 1);
@@ -86,6 +88,4 @@ fn main() {
             }
         }
     }
-
-
 }

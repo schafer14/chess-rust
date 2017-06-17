@@ -45,6 +45,14 @@ impl Move {
         let possibles = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         let parts = str.trim().split(" ").collect::<Vec<&str>>();
 
+        if parts == ["0", "0"] {
+            return Move { from: Square { number: 1 }, to: Square { number: 1 }, special: Some('o')};
+        }
+
+        if parts == ["0", "0", "0"] {
+            return Move { from: Square { number: 1 }, to: Square { number: 1 }, special: Some('O')};
+        }
+
         let mut from_str = parts[0].chars();
 
         let from_i_char = from_str.next().unwrap();

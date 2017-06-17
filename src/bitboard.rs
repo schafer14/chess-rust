@@ -233,7 +233,7 @@ impl BitBoard {
 
             for opp_move in child.moves() {
                 if opp_move.to.number == king_square {
-                    bad_moves.push(moove);
+                    bad_moves.push(moove.clone());
                     break;
                 }
             }
@@ -264,7 +264,7 @@ impl BitBoard {
             let opponents = self.wp | self.wn | self.wb | self.wr | self.wq | self.wk;
             let mut opponent_attacks: u64 = 0;
             let protected_squares_right: u64 = 0b1110000;
-            let protected_squares_left: u64 = 0b11110;
+            let protected_squares_left: u64 = 0b11100;
 
             //            TODO BBS: Check one bitboard at a time starting with most powerful pieces
             let mut moves_list = &mut moves::straight(self.br, empty, opponents);
@@ -281,11 +281,11 @@ impl BitBoard {
             opponent_attacks = opponent_attacks | self.bp >> 7 | self.bp >> 9;
 
             if protected_squares_right & opponent_attacks == 0 && could_castle_right {
-                moves.push(definitions::Move::from_num_special(0, 0, 'o'));
+                moves.push(definitions::Move::from_num_special(4, 6, 'o'));
             }
 
             if protected_squares_left & opponent_attacks == 0 && could_castle_left {
-                moves.push(definitions::Move::from_num_special(0, 0, 'O'));
+                moves.push(definitions::Move::from_num_special(4, 2, 'O'));
             }
         }
 
@@ -325,11 +325,11 @@ impl BitBoard {
             opponent_attacks = opponent_attacks | self.wp << 7 | self.wp << 9;
 
             if protected_squares_right & opponent_attacks == 0 && could_castle_right {
-                moves.push(definitions::Move::from_num_special(0, 0, 'o'));
+                moves.push(definitions::Move::from_num_special(60, 62, 'o'));
             }
 
             if protected_squares_left & opponent_attacks == 0 && could_castle_left {
-                moves.push(definitions::Move::from_num_special(0, 0, 'O'));
+                moves.push(definitions::Move::from_num_special(60, 58, 'O'));
             }
         }
 

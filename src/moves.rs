@@ -1,5 +1,7 @@
 use definitions;
 
+use std::process::exit;
+
 pub fn straight(bitboard:u64, empty:u64, opponent:u64) -> Vec<definitions::Move> {
     let mut moves = Vec::new();
 
