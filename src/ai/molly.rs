@@ -4,7 +4,7 @@ use bitboard;
 use definitions;
 
 const VERBOSE:bool = true;
-const DEPTH:usize = 9;
+const DEPTH:usize = 7;
 const ALPHA_BETA:bool = true;
 
 pub fn gen_move(main_board:bitboard::BitBoard) -> Option<definitions::Move> {

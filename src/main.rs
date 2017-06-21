@@ -3,6 +3,7 @@ mod definitions;
 mod moves;
 mod perft_test;
 use std::io;
+use std::thread;
 
 mod pieces {
     pub mod white_pawns;
@@ -11,6 +12,7 @@ mod pieces {
 
 mod ai {
     pub mod molly;
+    pub mod molly2;
     pub mod ids;
 }
 
@@ -39,9 +41,9 @@ fn main() {
             let cmd = parts.remove(0);
             match cmd {
 //                "q" => break,
-//                "h" => println!("{:?}", board.moves_accurate()),
+                "h" => println!("{:?}", board.moves()),
 //                "perft" => println!("{:?}", ai::ids::perft(board.clone(), 5)),
-//                "test" => perft_test::test(),
+                "test" => perft_test::test(),
 //                "divide" => {
 //                    let num = parts.clone()[1].chars().next().unwrap().to_digit(10).unwrap() as usize;
 //                    ai::ids::divide(board.clone(), num - 1);
@@ -75,6 +77,7 @@ fn main() {
 //                }
 
 //                UCI Stuff
+
                 "uci" => {
                     println!("id name Maple Heather Bennett-Schafer");
                     println!("id author Banner B. Schafer");
@@ -90,7 +93,6 @@ fn main() {
                 },
 
                 "position" => {
-//                    TODO BBS real notation does not have a space
                     if parts.remove(0) == "startpos" {
                         if parts.len() > 0 {
                             board = bitboard::BitBoard::from_fen(START_POS.to_string());
@@ -102,14 +104,37 @@ fn main() {
                             }
                         }
                     } else {
-//                        TODO BBS Do this
-                        println!("Cannot start from FEN");
+                        let mut str = "".to_owned();
+
+                        while parts[0] != "-" {
+                            str.push_str(parts.remove(0));
+                            str.push_str(" ");
+                        }
+
+                        board = bitboard::BitBoard::from_fen(str);
+
+                        if parts.contains(&"moves") {
+                            while parts.remove(0) != "moves" {}
+
+                            while parts.len() > 0 {
+                                let moove_str = parts.remove(0);
+                                let moove = definitions::Move::from_str(String::from(moove_str));
+                                board.make_move(moove);
+                            }
+                        }
                     }
                 },
 
                 "go" => {
-                    let moove = ai::molly::gen_move(board.clone());
-                    println!("bestmove {}", moove.unwrap());
+                    let clone = board.clone();
+                    thread::spawn(move || {
+                        let moove = ai::molly2::gen_move(clone);
+                        println!("bestmove {}", moove.unwrap());
+                    });
+                },
+
+                "stop" => {
+
                 },
 
                 "quit" => break,

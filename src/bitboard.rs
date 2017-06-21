@@ -6,7 +6,7 @@ use definitions;
 use std::fmt;
 use std::process;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct BitBoard {
     pub bp: u64,
     pub wp: u64,
@@ -22,7 +22,7 @@ pub struct BitBoard {
     pub wk: u64,
     castling: [bool; 4],
     pub turn: bool,
-    history: Vec<definitions::Move>
+    last: Option<definitions::Move>
 }
 
 impl fmt::Display for BitBoard {
@@ -75,7 +75,7 @@ impl fmt::Display for BitBoard {
 impl BitBoard {
     pub fn new(init_board:[[char; 8]; 8]) -> BitBoard {
         let mut bitboard = BitBoard { bp: 0, wp: 0, bn: 0, wn: 0, bb: 0, wb: 0, br: 0, wr: 0, bq: 0,
-            wq: 0, bk: 0, wk: 0, turn: true, castling: [true, true, true, true], history: Vec::new() };
+            wq: 0, bk: 0, wk: 0, turn: true, castling: [true, true, true, true], last: None };
 
         for row in 0..8 {
             for col in 0..8 {
@@ -192,24 +192,24 @@ impl BitBoard {
         if turn {
             let opponents = self.bp | self.bn | self.bb | self.br | self.bq | self.bk;
 
-            moves_list.append(&mut white_pawns::moves(self.wp, empty, opponents, self.bp, self.history.clone()));
-            moves_list.append(&mut moves::straight(self.wr, empty, opponents));
-            moves_list.append(&mut moves::straight(self.wq, empty, opponents));
-            moves_list.append(&mut moves::diagonal(self.wb, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.wq, empty, opponents));
+            moves_list.append(&mut moves::straight(self.wq, empty, opponents));
+            moves_list.append(&mut moves::straight(self.wr, empty, opponents));
+            moves_list.append(&mut moves::diagonal(self.wb, empty, opponents));
             moves_list.append(&mut moves::knight(self.wn, empty, opponents));
+            moves_list.append(&mut white_pawns::moves(self.wp, empty, opponents, self.bp, self.last));
             moves_list.append(&mut moves::king(self.wk, empty, opponents));
             moves_list.append(&mut self.castling_white(empty));
 //            Blacks turn
         } else {
             let opponents = self.wp | self.wn | self.wb | self.wr | self.wq | self.wk;
 
-            moves_list.append(&mut black_pawns::moves(self.bp, empty, opponents, self.wp, self.history.clone()));
-            moves_list.append(&mut moves::straight(self.br, empty, opponents));
-            moves_list.append(&mut moves::straight(self.bq, empty, opponents));
-            moves_list.append(&mut moves::diagonal(self.bb, empty, opponents));
             moves_list.append(&mut moves::diagonal(self.bq, empty, opponents));
+            moves_list.append(&mut moves::straight(self.bq, empty, opponents));
+            moves_list.append(&mut moves::straight(self.br, empty, opponents));
+            moves_list.append(&mut moves::diagonal(self.bb, empty, opponents));
             moves_list.append(&mut moves::knight(self.bn, empty, opponents));
+            moves_list.append(&mut black_pawns::moves(self.bp, empty, opponents, self.wp, self.last));
             moves_list.append(&mut moves::king(self.bk, empty, opponents));
             moves_list.append(&mut self.castling_black(empty));
         }
@@ -337,20 +337,21 @@ impl BitBoard {
     }
 
     pub fn make_move(&mut self, moove:definitions::Move) {
-        if moove.special == Some('E') {
-            if self.turn {
-                let digit = 1u64 << moove.to.number;
-                let taken = digit >> 8;
-                self.bp = self.bp - taken;
-            } else {
-                let digit = 1u64 << moove.to.number;
-                let taken = digit << 8;
-                self.wp = self.wp - taken;
-            };
-        }
-
         let from = 1u64 << moove.from.number;
         let to = 1u64 << moove.to.number;
+
+        let blk = self.bp | self.bn | self.bb | self.br | self.bq | self.bk;
+        let wht = self.wp | self.wn | self.wb | self.wr | self.wq | self.wk;
+
+        if self.wp & from > 0 && (moove.from.number + 7 == moove.to.number || moove.from.number + 9 == moove.to.number) && to & blk == 0 {
+            let taken = to >> 8;
+            self.bp = self.bp - taken;
+        } else if self.bp & from > 0 && (moove.from.number - 7 == moove.to.number || moove.from.number - 9 == moove.to.number) && to & wht == 0 {
+            let digit = 1u64 << moove.to.number;
+            let taken = digit << 8;
+            self.wp = self.wp - taken;
+        }
+
 
         if self.wk & to > 0 {
             self.wk = self.wk - to;
@@ -478,7 +479,7 @@ impl BitBoard {
 
         if moove.special.is_some() {
             match moove.special {
-                Some('N') => {
+                Some('n') => {
                     if self.turn {
                         self.wp = self.wp - (1u64 << moove.to.number);
                         self.wn = self.wn + (1u64 << moove.to.number);
@@ -487,7 +488,7 @@ impl BitBoard {
                         self.bn = self.bn + (1u64 << moove.to.number);
                     };
                 },
-                Some('B') => {
+                Some('b') => {
                     if self.turn {
                         self.wp = self.wp - (1u64 << moove.to.number);
                         self.wb = self.wb + (1u64 << moove.to.number);
@@ -496,7 +497,7 @@ impl BitBoard {
                         self.bb = self.bb + (1u64 << moove.to.number);
                     };
                 },
-                Some('R') => {
+                Some('r') => {
                     if self.turn {
                         self.wp = self.wp - (1u64 << moove.to.number);
                         self.wr = self.wr + (1u64 << moove.to.number);
@@ -505,7 +506,7 @@ impl BitBoard {
                         self.br = self.br + (1u64 << moove.to.number);
                     };
                 },
-                Some('Q') => {
+                Some('q') => {
                     if self.turn {
                         self.wp = self.wp - (1u64 << moove.to.number);
                         self.wq = self.wq + (1u64 << moove.to.number);
@@ -518,7 +519,7 @@ impl BitBoard {
             }
         }
 
-        self.history.push(moove.clone());
+        self.last = Some(moove.clone());
         self.turn = if self.turn { false } else { true };
     }
 

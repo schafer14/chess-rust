@@ -1,11 +1,11 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Square {
     pub number: u8
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Move {
     pub from: Square,
     pub to: Square,
@@ -69,8 +69,12 @@ impl Move {
 
         let to_j = chars.next().unwrap().to_digit(10).unwrap() as usize;
 
-        Move { from: Square { number: (from_i + (from_j - 1) * 8) as u8 },
-            to: Square { number: (to_i + (to_j - 1) * 8) as u8 }, special: None }
+        match chars.next() {
+            Some(x) => Move { from: Square { number: (from_i + (from_j - 1) * 8) as u8 }, to: Square { number: (to_i + (to_j - 1) * 8) as u8 }, special: Some(x) },
+            None => Move { from: Square { number: (from_i + (from_j - 1) * 8) as u8 }, to: Square { number: (to_i + (to_j - 1) * 8) as u8 }, special: None },
+        }
+
+
     }
 }
 
