@@ -18,7 +18,7 @@ pub fn gen_move(bb:BitBoard) -> Option<Move> {
     let mut depth = 0;
     let mut master_plan = Vec::new();
 
-    while time::precise_time_s() - start_time < 3.0 {
+    while time::precise_time_s() - start_time < 1.0 {
         depth = depth + 1;
         let color_multiplier = if bb.turn { 1 } else { -1 };
         let (plan, score) = negamax(&bb, depth, color_multiplier, MIN + 1, MAX);

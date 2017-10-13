@@ -41,14 +41,39 @@ fn main() {
             let cmd = parts.remove(0);
             match cmd {
 //                "q" => break,
-                "h" => println!("{:?}", board.moves()),
+                "bbs-h" => println!("{:?}", board.moves()),
 //                "perft" => println!("{:?}", ai::ids::perft(board.clone(), 5)),
-                "test" => perft_test::test(),
+                "bbs-test" => perft_test::test(),
 //                "divide" => {
 //                    let num = parts.clone()[1].chars().next().unwrap().to_digit(10).unwrap() as usize;
 //                    ai::ids::divide(board.clone(), num - 1);
 //                },
-//                "d" => println!("{}", board),
+                "bbs-d" => println!("{}", board),
+
+                "bbs-ez" => {
+                    board = bitboard::BitBoard::from_fen(START_POS.to_string());
+                    while parts.len() > 0 {
+                        let moove_str = parts.remove(0);
+                        let moove = definitions::Move::from_str(String::from(moove_str));
+                        board.make_move(moove);
+                    };
+
+                    let clone = board.clone();
+                    thread::spawn(move || {
+                        let moove = ai::molly2::gen_move(clone);
+                        println!("bestmove {}", moove.unwrap());
+                    });
+                },
+                "bbs-ez-h" => {
+                    board = bitboard::BitBoard::from_fen(START_POS.to_string());
+                    while parts.len() > 0 {
+                        let moove_str = parts.remove(0);
+                        let moove = definitions::Move::from_str(String::from(moove_str));
+                        board.make_move(moove);
+                    };
+
+                    println!("{:?}", board.moves());
+                },
 //                "m" => {
 //                    let moove = molly::gen_move(board.clone()).unwrap();
 //                    old_board = board.clone();
@@ -96,7 +121,6 @@ fn main() {
                     if parts.remove(0) == "startpos" {
                         if parts.len() > 0 {
                             board = bitboard::BitBoard::from_fen(START_POS.to_string());
-                            parts.remove(0);
                             while parts.len() > 0 {
                                 let moove_str = parts.remove(0);
                                 let moove = definitions::Move::from_str(String::from(moove_str));
