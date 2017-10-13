@@ -63,6 +63,8 @@ fn main() {
                         let moove = ai::molly2::gen_move(clone);
                         println!("bestmove {}", moove.unwrap());
                     });
+
+                    break;
                 },
                 "bbs-ez-h" => {
                     board = bitboard::BitBoard::from_fen(START_POS.to_string());
@@ -73,6 +75,8 @@ fn main() {
                     };
 
                     println!("{:?}", board.moves());
+
+                    break;
                 },
 //                "m" => {
 //                    let moove = molly::gen_move(board.clone()).unwrap();
