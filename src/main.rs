@@ -25,7 +25,7 @@ static START_POS: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 
 
 fn main() {
     let reader = io::stdin();
-    
+
     let mut board = bitboard::BitBoard::from_fen(START_POS.to_string());
 
     #[allow(while_true)]
@@ -59,23 +59,14 @@ fn main() {
                     };
 
                     let clone = board.clone();
-                    thread::spawn(move || {
+                    let child = thread::spawn(move || {
                         let moove = ai::molly2::gen_move(clone);
+                        board.make_move(moove.clone().unwrap());
                         println!("bestmove {}", moove.unwrap());
+                        println!("legalmoves {:?}", board.moves());
                     });
 
-                    break;
-                },
-                "bbs-ez-h" => {
-                    board = bitboard::BitBoard::from_fen(START_POS.to_string());
-                    while parts.len() > 0 {
-                        let moove_str = parts.remove(0);
-                        let moove = definitions::Move::from_str(String::from(moove_str));
-                        board.make_move(moove);
-                    };
-
-                    println!("{:?}", board.moves());
-
+                    let res = child.join();
                     break;
                 },
 //                "m" => {
